@@ -25,6 +25,12 @@ Non-obvious setup facts:
   chowns only `upload/files` and `upload/cache` to `www-data` (no chown of source).
 - Installer ran once against the `db_data` volume; admin account is `admin`
   (`admin@example.com`). Reset the volume only if you want a fresh install.
+- **Email verification is off** (`cb_config.email_verification = 0`), so signup logs the
+  user in immediately. `user.class.php::signup_user()` previously called
+  `hasPermissionOrRedirect('admin_access', true)`, which bounced guests to the
+  login page right after signup; it now uses `hasAdminAccess()` (still skips the
+  welcome email for admin-created accounts). Setting `email_verification = 1`
+  brings the activation-by-email flow back.
 - Verify: `curl -sI http://localhost:3000/` should be 200 with a >30 KB body
   (a small body means maintenance mode is back), and
   `/admin_area/` should redirect to its login page.
