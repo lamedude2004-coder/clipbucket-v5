@@ -1,0 +1,86 @@
+# Base44 dev environment for ClipBucket V5
+#
+# Runs the application from the cloned source (bind mount) with a separate
+# MariaDB service. Nothing is baked into an image, so edits show up on reload.
+# Web entry point: host port 3000 -> nginx in the web container.
+
+services:
+  db:
+    image: mariadb:10.11
+    restart: on-failure
+    environment:
+      MARIADB_ROOT_PASSWORD: clipbucket_root_dev
+      MARIADB_DATABASE: clipbucket
+      MARIADB_USER: clipbucket
+      MARIADB_PASSWORD: clipbucket_dev
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 30s
+
+  web:
+    build:
+      context: "${BASE44_PROJECT_ROOT}"
+      dockerfile: "${BASE44_PROJECT_ROOT}/Dockerfile.base44"
+    restart: on-failure
+    ports:
+      - "3000:80"
+    volumes:
+      - "${BASE44_PROJECT_ROOT}:/srv/http/clipbucket"
+    environment:
+      # MariaDB runs as its own service; the app only needs the credentials.
+      MYSQL_PASSWORD: clipbucket_dev
+      # Sandbox preview proxy (see AGENTS.md).
+      BASE44_PREVIEW_MODE: "${BASE44_PREVIEW_MODE}"
+      BASE44_PUBLIC_HOST_SUFFIX: "${BASE44_PUBLIC_HOST_SUFFIX}"
+      BASE44_SANDBOX_HOST_DOMAIN: "${BASE44_SANDBOX_HOST_DOMAIN}"
+    depends_on:
+      db:
+        condition: service_healthy
+    # Skip the upstream entrypoint: it chowns the source mount and manages an
+    # in-container database. Here the source stays owned by the sandbox user
+    # and only the runtime data directories are handed to PHP-FPM.
+    entrypoint: []
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        mkdir -p /run/php
+        # The sandbox checkout is mode 0700; let the web user traverse it.
+        chmod o+rx /srv/http/clipbucket
+        # Only runtime data directories must be writable by PHP-FPM.
+        chown -R www-data:www-data /srv/http/clipbucket/upload/files /srv/http/clipbucket/upload/cache
+        # The repo ships files/temp/install.me (installer unlocked). Once the DB is
+        # installed that file makes the app force maintenance mode, so mark the
+        # install as finished. Untracked + gitignored, so tracked source is untouched.
+        touch /srv/http/clipbucket/upload/files/temp/install.me.not
+        # Preview only: the app builds absolute asset URLs from the request host,
+        # which is the internal sandbox host behind the proxy. Point its base_url
+        # at the public preview origin instead (DB value, refreshed each start).
+        if [ "$${BASE44_PREVIEW_MODE}" = "1" ] && [ -n "$${BASE44_PUBLIC_HOST_SUFFIX}" ] && [ -f /srv/http/clipbucket/upload/includes/config.php ]; then
+          php -r '
+            require "/srv/http/clipbucket/upload/includes/config.php";
+            $$m = @new mysqli($$DBHOST, $$DBUSER, $$DBPASS, $$DBNAME, (int)$$DBPORT);
+            if (!$$m->connect_errno) {
+              $$url = "https://3000-" . getenv("BASE44_PUBLIC_HOST_SUFFIX") . "/";
+              $$n = "base_url";
+              $$s = $$m->prepare("UPDATE " . TABLE_PREFIX . "config SET value = ? WHERE name = ?");
+              if ($$s) { $$s->bind_param("ss", $$url, $$n); $$s->execute(); }
+            }
+          ' || true
+        fi
+        php-fpm -D
+        exec nginx -g 'daemon off;'
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -o /dev/null http://127.0.0.1/ || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+volumes:
+  db_data:
