@@ -108,6 +108,9 @@ class Video extends Objects
             $this->fields[] = 'use_backdrop_as_default_thumb';
         }
 
+        // Custom: SFW/NSFW mark set by the uploader in the video details form.
+        $this->fields[] = 'nsfw';
+
         if (Update::IsCurrentDBVersionIsHigherOrEqualTo('5.5.3', '128')) {
             $this->fields[] = 'last_modified';
         }
@@ -724,6 +727,15 @@ class Video extends Objects
     /**
      * @throws Exception
      */
+    /**
+     * Custom: display the NSFW badge on video thumbnails.
+     */
+    public static function display_nsfw($video = [])
+    {
+        if (!empty($video['nsfw']) && $video['nsfw'] == 'yes') {
+            echo '<span class="thumb-nsfw" style="position:absolute;top:10px;left:10px;z-index:4;background:#d9534f;color:#fff;font-size:11px;font-weight:700;line-height:1;padding:4px 6px;border-radius:3px;">NSFW</span>';
+        }
+    }
     public static function display_restricted($video)
     {
         if( !empty($video['age_restriction']) ){
@@ -1465,6 +1477,7 @@ class CBvideo extends CBCategory
         if( config('enable_age_restriction') == 'yes' ){
             register_anchor_function('display_restricted', 'in_video_thumb', Video::class);
         }
+        register_anchor_function('display_nsfw', 'in_video_thumb', self::class);
         register_anchor_function('display_banner', 'in_video_thumb', self::class);
         register_anchor_function('display_convert_percent', 'in_video_thumb', self::class);
     }

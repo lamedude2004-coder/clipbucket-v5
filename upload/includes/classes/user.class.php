@@ -3523,15 +3523,6 @@ class userquery extends CBCategory
             ];
         }
 
-        $av_details = getimagesize($data['filepath']);
-        if ($av_details[0] > config('max_bg_width')) {
-            unlink($data['filepath']);
-            return [
-                'status' => false,
-                'msg'    => lang('file_width_exceeds', config('max_bg_width'))
-            ];
-        }
-
         User::getInstance()->delBackground($data['user_id']);
 
         $file_name = $data['user_id'] . '.' . $data['extension'];

@@ -32,11 +32,14 @@ RUN printf '%s\n' \
         'listen.mode = 0660' \
         > /usr/local/etc/php-fpm.d/zzz-clipbucket.conf
 
+# client_max_body_size is raised to 0 (no nginx limit): profile pictures and
+# banners accept any image size, so only php.ini's upload limits apply.
 COPY docker/nginx-clipbucket.conf /etc/nginx/sites-available/clipbucket
 RUN rm -f /etc/nginx/sites-enabled/default \
     && ln -s /etc/nginx/sites-available/clipbucket /etc/nginx/sites-enabled/ \
     && sed -i 's/DOMAIN_NAME_PLACEHOLDER/clipbucket.local/g' /etc/nginx/sites-available/clipbucket \
-    && sed -i 's/phpPHP_VERSION_PLACEHOLDER-fpm/php8.3-fpm/g' /etc/nginx/sites-available/clipbucket
+    && sed -i 's/phpPHP_VERSION_PLACEHOLDER-fpm/php8.3-fpm/g' /etc/nginx/sites-available/clipbucket \
+    && sed -i 's/client_max_body_size 2M;/client_max_body_size 0;/' /etc/nginx/sites-available/clipbucket
 
 WORKDIR /srv/http/clipbucket
 EXPOSE 80
