@@ -31,6 +31,9 @@ services:
       - "3000:80"
     volumes:
       - "${BASE44_PROJECT_ROOT}:/srv/http/clipbucket"
+    env_file:
+      # Platform-managed secrets (Vidara API key). Keep last so it wins.
+      - /run/base44/app.env
     environment:
       # MariaDB runs as its own service; the app only needs the credentials.
       MYSQL_PASSWORD: clipbucket_dev

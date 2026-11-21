@@ -31,6 +31,17 @@ Non-obvious setup facts:
   login page right after signup; it now uses `hasAdminAccess()` (still skips the
   welcome email for admin-created accounts). Setting `email_verification = 1`
   brings the activation-by-email flow back.
+- **Uploaded videos are stored on Vidara.so** when `VIDARA_API_KEY` is present
+  (delivered from `/run/base44/app.env`, wired into the `web` service). The
+  conversion CLI (`upload/actions/video_convert.php`) then uploads the temp file
+  instead of running ffmpeg: `Vidara::process()` stores the file, builds the
+  thumbnails from the local copy, and marks the video `Successful` with
+  `remote_play_url = vidara:<filecode>`. The existing player is unchanged —
+  `remote_play::get_video_url()` resolves the marker to a fresh signed HLS URL
+  from `https://vidara.to/api/stream` on each watch-page render (the signed URL
+  is short lived). Without the key, the normal local conversion runs.
+- **`/usr/bin/php` is symlinked to the image's `php`** because
+  `config('php_path')` points there and background jobs (conversion) call it.
 - Verify: `curl -sI http://localhost:3000/` should be 200 with a >30 KB body
   (a small body means maintenance mode is back), and
   `/admin_area/` should redirect to its login page.

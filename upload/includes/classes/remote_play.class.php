@@ -82,6 +82,11 @@ class remote_play{
             return false;
         }
 
+        // Vidara-hosted videos keep a marker instead of a public URL.
+        if( strpos($video_url, Vidara::MARKER) === 0 ){
+            return $video_url;
+        }
+
         if( filter_var($video_url, FILTER_VALIDATE_URL) === FALSE ){
             e(lang('remote_play_invalid_url'));
             return false;
@@ -111,6 +116,16 @@ class remote_play{
     public static function get_video_url($video, $hq = false)
     {
         if( !empty($video['remote_play_url']) ) {
+            // Videos stored on Vidara resolve to a freshly signed stream URL.
+            if( Vidara::isVidaraVideo($video) ) {
+                $stream_url = '';
+                try {
+                    $stream_url = Vidara::getStreamUrl(Vidara::getFilecode($video));
+                } catch (Throwable $e) {
+                    $stream_url = '';
+                }
+                return [$stream_url ?: DirPath::getUrl('videos') . 'no_video.mp4'];
+            }
             return $video['remote_play_url'];
         }
         return false;
