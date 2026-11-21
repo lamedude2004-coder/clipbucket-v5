@@ -106,7 +106,7 @@ switch ($mode) {
             'mimeType'            => 'video',
             'destinationFilePath' => $targetFile,
             'keepExtension'       => true,
-            'maxFileSize'         => !empty((int)config('max_upload_size')) ? config('max_upload_size') : 1000,
+            'maxFileSize'         => (int)config('max_upload_size'), // 0 = no size limit
             'allowedExtensions'   => explode(',',config('allowed_video_types'))
         ];
 

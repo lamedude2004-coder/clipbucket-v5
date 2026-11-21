@@ -319,8 +319,8 @@ class FFMpeg
             update_video_by_filename($this->file_name, ['aspect_ratio'], [$aspect_ratio]);
         }
 
-        $max_duration = config('max_video_duration') * 60;
-        if ($this->input_details['duration'] > $max_duration) {
+        $max_duration = (int)config('max_video_duration') * 60;
+        if ($max_duration > 0 && $this->input_details['duration'] > $max_duration) {
             $max_duration_seconds = $max_duration / 60;
             $this->log->newSection('Conversion failed');
             $this->log->writeLine('Video duration was ' . $this->input_details['duration'] . ' minutes and Max video duration is ' . $max_duration_seconds . ' minutes');

@@ -51,7 +51,9 @@ class M00108 extends \Migration
             $allowed_types = Photo::getAllowedUploadTypes();
         }
         self::updateConfig('allowed_photo_types', implode(',', $allowed_types));
-        self::updateConfig('max_photo_size', config('max_upload_size'));
+        if ((int)config('max_upload_size') > 0) {
+            self::updateConfig('max_photo_size', config('max_upload_size'));
+        }
         self::generateTranslation('file_width_exceeds', [
             'fr' => 'La largeur de l’image ne peux dépasser %spx',
             'en' => 'Image width can’t exceed %spx'

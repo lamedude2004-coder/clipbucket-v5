@@ -239,8 +239,9 @@ class FileUpload
             );
         }
 
-        $max_file_size_in_bytes = getBytesFromFileSize($this->maxFileSize . 'M');
-        if (empty($this->finalFileSize) || $this->finalFileSize > $max_file_size_in_bytes) {
+        // A maxFileSize of 0 means no size limit
+        $max_file_size_in_bytes = (int)$this->maxFileSize > 0 ? getBytesFromFileSize($this->maxFileSize . 'M') : 0;
+        if (empty($this->finalFileSize) || ($max_file_size_in_bytes > 0 && $this->finalFileSize > $max_file_size_in_bytes)) {
             $this->error(lang('file_size_cant_exceeds_x_x', [$this->maxFileSize, lang('mb')]));
         }
 

@@ -18,7 +18,11 @@
                 <span class="upload-logo"></span>
                 <strong class="block-title">{lang code="drag_drop"}</strong>
                 <p>
-                    {lang(page_upload_video_limits, [ClipBucket::getInstance()->configs['max_upload_size'],ClipBucket::getInstance()->configs['max_video_duration']])}
+                    {if ClipBucket::getInstance()->configs['max_upload_size'] > 0 && ClipBucket::getInstance()->configs['max_video_duration'] > 0}
+                        {lang(page_upload_video_limits, [ClipBucket::getInstance()->configs['max_upload_size'],ClipBucket::getInstance()->configs['max_video_duration']])}
+                    {else}
+                        No limit on video size or length — just make sure your video is in a common video format.
+                    {/if}
                 </p>
             </div>
             <div class="selectButtonContainer">

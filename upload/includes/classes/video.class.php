@@ -1367,7 +1367,8 @@ class Video extends Objects
      */
     public static function getMaxAllowedSubtitleSize():int
     {
-        return min((int)config('maximum_allowed_subtitle_size'), (int)config('max_upload_size'));
+        $max_upload_size = (int)config('max_upload_size');
+        return $max_upload_size > 0 ? min((int)config('maximum_allowed_subtitle_size'), $max_upload_size) : (int)config('maximum_allowed_subtitle_size');
     }
 
     /**
