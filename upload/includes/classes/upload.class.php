@@ -537,6 +537,21 @@ class Upload
             ];
         }
 
+        // Custom: SFW/NSFW content rating chosen by the uploader.
+        $fields['nsfw'] = [
+            'title'    => 'Content rating',
+            'type'     => 'dropdown',
+            'name'     => 'nsfw',
+            'id'       => 'nsfw',
+            'value'    => [
+                'no'  => 'SFW (safe for work)',
+                'yes' => 'NSFW (18+)',
+            ],
+            'checked'  => (!empty($default['nsfw']) ? $default['nsfw'] : 'no'),
+            'db_field' => 'nsfw',
+            'required' => 'no',
+            'hint_2'   => 'Mark this video as SFW (safe for work) or NSFW (not safe for work).',
+        ];
         $fields['broadcast'] = [
             'title'             => lang('vdo_br_opt'),
             'type'              => 'dropdown',
@@ -852,29 +867,14 @@ class Upload
             e(lang('please_select_img_file'));
             return false;
         }
-        $av_details = getimagesize($file['tmp_name']);
-
         if (!userquery::getInstance()->user_exists($uid)) {
             e(lang('user_doesnt_exist'));
             return false;
         }
 
-        if ($file['size'] / 1024 / 1024 > Photo::getMaxAllowedSize()) {
-            e(lang('file_size_exceeds', Photo::getMaxAllowedSize()));
-            return false;
-        }
-        switch ($type) {
-            case 'avatar':
-                if ($av_details[0] > config('max_profile_pic_width')) {
-                    e(lang('file_width_exceeds', config('max_profile_pic_width')));
-                    return false;
-                }
-            case 'background':
-                if ($av_details[0] > config('max_bg_width')) {
-                    e(lang('file_width_exceeds', config('max_bg_width')));
-                    return false;
-                }
-        }
+        // Custom: profile pictures and banners have no size or dimension limit;
+        // the file only has to be a valid image (checked below). Recommended
+        // dimensions are shown in the account / channel UI.
         if (!file_exists($file['tmp_name'])) {
             e(lang('class_error_occured'));
             return false;

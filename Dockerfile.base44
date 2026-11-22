@@ -1,0 +1,50 @@
+# Base44 dev runtime for ClipBucket V5 (nginx + PHP-FPM).
+#
+# The application source is NOT baked in: it is bind-mounted from the checkout,
+# so edits are served immediately. This replaces the upstream `dockerfile`,
+# whose malformed `VOLUME` instruction breaks container recreation.
+
+FROM php:8.3-fpm-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        nginx ffmpeg mediainfo sendmail-bin curl git unzip \
+        libonig-dev libpng-dev libjpeg62-turbo-dev libfreetype6-dev \
+        libzip-dev libicu-dev libxml2-dev libffi-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j"$(nproc)" mysqli gd intl zip mbstring exif opcache ffi \
+    && rm -rf /var/lib/apt/lists/*
+
+# ClipBucket calls `php` from config('php_path') = /usr/bin/php for background
+# jobs (video conversion); the image ships it in /usr/local/bin.
+RUN ln -s /usr/local/bin/php /usr/bin/php
+
+RUN printf '%s\n' \
+        'max_execution_time = 7200' \
+        'memory_limit = 512M' \
+        'upload_max_filesize = 2048M' \
+        'post_max_size = 2048M' \
+        'ffi.enable = true' \
+        > /usr/local/etc/php/conf.d/clipbucket.ini
+
+# nginx talks to PHP-FPM over a unix socket (see docker/nginx-clipbucket.conf).
+# zzz-* loads after the image's zz-docker.conf (listen = 9000) so this wins.
+RUN printf '%s\n' \
+        '[www]' \
+        'listen = /run/php/php8.3-fpm.sock' \
+        'listen.owner = www-data' \
+        'listen.group = www-data' \
+        'listen.mode = 0660' \
+        'clear_env = no' \
+        > /usr/local/etc/php-fpm.d/zzz-clipbucket.conf
+
+# client_max_body_size is raised to 0 (no nginx limit): profile pictures and
+# banners accept any image size, so only php.ini's upload limits apply.
+COPY docker/nginx-clipbucket.conf /etc/nginx/sites-available/clipbucket
+RUN rm -f /etc/nginx/sites-enabled/default \
+    && ln -s /etc/nginx/sites-available/clipbucket /etc/nginx/sites-enabled/ \
+    && sed -i 's/DOMAIN_NAME_PLACEHOLDER/clipbucket.local/g' /etc/nginx/sites-available/clipbucket \
+    && sed -i 's/phpPHP_VERSION_PLACEHOLDER-fpm/php8.3-fpm/g' /etc/nginx/sites-available/clipbucket \
+    && sed -i 's/client_max_body_size 2M;/client_max_body_size 0;/' /etc/nginx/sites-available/clipbucket
+
+WORKDIR /srv/http/clipbucket
+EXPOSE 80

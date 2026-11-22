@@ -528,6 +528,7 @@ CREATE TABLE `{tbl_prefix}video` (
   `bits_color` tinyint(4) DEFAULT NULL,
   `subscription_email` enum('pending','sent') NOT NULL DEFAULT 'pending',
   `age_restriction` INT DEFAULT NULL,
+  `nsfw` enum('yes','no') NOT NULL DEFAULT 'no',
   `default_thumbnail` int NULL DEFAULT NULL,
   `default_poster` int(3) NULL DEFAULT NULL,
   `default_backdrop` int(3) NULL DEFAULT NULL,

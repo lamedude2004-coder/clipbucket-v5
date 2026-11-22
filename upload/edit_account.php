@@ -45,7 +45,9 @@ if (isset($_FILES['Filedata'])) {
         'mimeType'            => 'image',
         'destinationFilePath' => $destinationFilePath,
         'keepExtension'       => true,
-        'maxFileSize'         => (Photo::getMaxAllowedSize()),
+        // Custom: no application-level size limit for channel banners, only the
+        // server's own upload limit (php.ini) applies.
+        'maxFileSize'         => (int)(getBytesFromFileSize(ini_get('upload_max_filesize')) / 1048576),
         'allowedExtensions'   => Photo::getAllowedPhotoExtension()
     ];
 

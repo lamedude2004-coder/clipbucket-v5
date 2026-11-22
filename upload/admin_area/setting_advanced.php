@@ -182,7 +182,9 @@ if (isset($_POST['update'])) {
     foreach ($rows as $field) {
         $value = ($_POST[$field]);
         if (in_array($field, $num_array)) {
-            if ($value <= 0 || !is_numeric($value)) {
+            // max_upload_size / max_video_duration accept 0, which means unlimited
+            $allow_zero = in_array($field, ['max_upload_size', 'max_video_duration']);
+            if (!is_numeric($value) || $value < 0 || ($value == 0 && !$allow_zero)) {
                 $value = 1;
             }
         }
@@ -205,7 +207,7 @@ if (isset($_POST['update'])) {
         if ($field == 'max_photo_size' || $field == 'maximum_allowed_subtitle_size') {
             $max_size = !empty($_POST['max_upload_size']) ? $_POST['max_upload_size'] : config('max_upload_size');
             $lang = ($field == 'max_photo_size' ? 'maximum_image_size' : 'option_maximum_allowed_subtitle_size');
-            if ($value > $max_size) {
+            if ($max_size > 0 && $value > $max_size) {
                 e(lang('s_cant_exceed_s', [lang($lang), lang('max_upload_size')]),'w');
             }
         }

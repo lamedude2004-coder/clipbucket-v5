@@ -3523,15 +3523,6 @@ class userquery extends CBCategory
             ];
         }
 
-        $av_details = getimagesize($data['filepath']);
-        if ($av_details[0] > config('max_bg_width')) {
-            unlink($data['filepath']);
-            return [
-                'status' => false,
-                'msg'    => lang('file_width_exceeds', config('max_bg_width'))
-            ];
-        }
-
         User::getInstance()->delBackground($data['user_id']);
 
         $file_name = $data['user_id'] . '.' . $data['extension'];
@@ -4450,10 +4441,10 @@ class userquery extends CBCategory
 
             Clipbucket_db::getInstance()->insert(tbl(userquery::getInstance()->dbtbl['user_profile']), $fields_list, $fields_data);
 
-            if (!User::getInstance()->hasPermission('admin_access') && config('email_verification')) {
+            if (!User::getInstance()->hasAdminAccess() && config('email_verification')) {
                 $var = ['avcode' => $avcode];
                 EmailTemplate::sendMail('verify_account', $insert_id, $var);
-            } elseif (!User::getInstance()->hasPermissionOrRedirect('admin_access', true)) {
+            } elseif (!User::getInstance()->hasAdminAccess()) {
                 $this->send_welcome_email($insert_id);
             }
 

@@ -2,10 +2,10 @@
 <div class="formSection clear">
     <h4 {if !Update::IsCurrentDBVersionIsHigherOrEqualTo('5.5.3','14')} title="{lang('cant_perform_action_until_app_fully_updated')}" class="disabled" {/if}>
         {if $use_backdrop_default}{lang('thumbnail')|ucfirst}{else}{lang('default_x',lang('thumbnail'))|ucfirst}{/if}
-        {if Update::IsCurrentDBVersionIsHigherOrEqualTo('5.5.3','14')}<i class="glyphicon glyphicon-chevron-down pull-right"></i>{/if}
+        {if Update::IsCurrentDBVersionIsHigherOrEqualTo('5.5.3','14')}<i class="glyphicon glyphicon-chevron-{if $expand_thumbs}up{else}down{/if} pull-right"></i>{/if}
 
     </h4>
-    <div class="sectionContent" style="display: none;">
+    <div class="sectionContent"{if empty($expand_thumbs)} style="display: none;"{/if}>
         <div class="row" style="margin-left: 5px; margin-right: 5px;">
             <h5 class="extracted_thumbs">{lang code="extracted_thumbs"}</h5>
             {if empty($vidthumbs) && !empty($is_from_upload)}
@@ -56,6 +56,7 @@
             {ANCHOR place="before_edit_video_form_thumbs_upload"}
             <div class="row" style="margin-left: 5px; margin-right: 5px;">
                 <h5>{lang code='upload_custom_thumbnail'}</h5>
+                <small class="help-block">Recommended: 1280 × 720 px (16:9). Any image size is accepted.</small>
                 <input name="vid_thumb[]" id="new_thumbs" type="file" />
                 <div class="form-group pull-right">
                     <input type="submit" id="upload_thumbs" value="{lang code='upload'}"  {if !empty($disable_submit)}disabled="disabled"{/if} class="btn btn-primary btn-sm" {if !Update::IsCurrentDBVersionIsHigherOrEqualTo('5.5.3', '14')} disabled="disabled" title="Sorry, you cannot perform this action until the application has been fully updated by an administrator" {/if}/>

@@ -101,7 +101,8 @@ class Photo extends Objects
      */
     public static function getMaxAllowedSize(): int
     {
-        return min((int)config('max_photo_size'), (int)config('max_upload_size'));
+        $max_upload_size = (int)config('max_upload_size');
+        return $max_upload_size > 0 ? min((int)config('max_photo_size'), $max_upload_size) : (int)config('max_photo_size');
     }
 
     /**

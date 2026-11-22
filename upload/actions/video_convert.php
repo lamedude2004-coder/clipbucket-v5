@@ -18,6 +18,12 @@ if (empty($fileName)) {
 
 $audio_track = $argv[2] ?? false;
 
+// Videos are hosted on Vidara when it is configured: upload instead of converting locally.
+if (Vidara::isEnabled()) {
+    Vidara::process($fileName);
+    die();
+}
+
 $videoDetails = CBvideo::getInstance()->get_video($fileName, true);
 $ext = $videoDetails['file_type'];
 $file_directory = $videoDetails['file_directory'] . DIRECTORY_SEPARATOR;

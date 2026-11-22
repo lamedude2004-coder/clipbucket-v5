@@ -18,7 +18,11 @@
                 <span class="upload-logo"></span>
                 <strong class="block-title">{lang code="drag_drop"}</strong>
                 <p>
-                    {lang(page_upload_video_limits, [ClipBucket::getInstance()->configs['max_upload_size'],ClipBucket::getInstance()->configs['max_video_duration']])}
+                    {if ClipBucket::getInstance()->configs['max_upload_size'] > 0 && ClipBucket::getInstance()->configs['max_video_duration'] > 0}
+                        {lang(page_upload_video_limits, [ClipBucket::getInstance()->configs['max_upload_size'],ClipBucket::getInstance()->configs['max_video_duration']])}
+                    {else}
+                        No limit on video size or length — just make sure your video is in a common video format.
+                    {/if}
                 </p>
             </div>
             <div class="selectButtonContainer">
@@ -218,7 +222,7 @@
                     </div>
                 </div>
                 {ANCHOR place="after_upload_form_sharing_fields"}
-                {include file="$style_dir/blocks/videos/thumb_form.html" from='upload' is_from_upload=true disable_submit=true}
+                {include file="$style_dir/blocks/videos/thumb_form.html" from='upload' is_from_upload=true disable_submit=true expand_thumbs=true}
                 {ANCHOR place="before_upload_form_submit"}
                 <div class="pad-bottom-sm text-right">
                     {if config('enable_tmdb') == 'yes' && config('tmdb_token') != '' && config('tmdb_enable_on_front_end') == 'yes'}
